@@ -1,0 +1,191 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+
+using namespace std;
+
+// Transaction class
+class Transaction {
+public:
+    string type;
+    double amount;
+    string time;
+
+    Transaction(string t, double a) {
+        type = t;
+        amount = a;
+        time = currentTime();
+    }
+
+    static string currentTime() {
+        time_t now = time(0);
+        char* dt = ctime(&now);
+        return string(dt);
+    }
+
+    void display() {
+        cout << type << " of ₹" << amount << " on " << time;
+    }
+};
+
+// Account class
+class Account {
+public:
+    int accountNumber;
+    double balance;
+    vector<Transaction> transactions;
+
+    Account(int accNo) {
+        accountNumber = accNo;
+        balance = 0.0;
+    }
+
+    void deposit(double amount) {
+        balance += amount;
+        transactions.push_back(Transaction("Deposit", amount));
+        cout << "✅ Deposited ₹" << amount << " successfully.\n";
+    }
+
+    bool withdraw(double amount) {
+        if (amount > balance) {
+            cout << "❌ Insufficient balance!\n";
+            return false;
+        }
+        balance -= amount;
+        transactions.push_back(Transaction("Withdrawal", amount));
+        cout << "✅ Withdrawn ₹" << amount << " successfully.\n";
+        return true;
+    }
+
+    void showTransactions() {
+        cout << "\n📜 Transaction History:\n";
+        for (auto &t : transactions) {
+            t.display();
+        }
+        cout << endl;
+    }
+
+    void displayAccountInfo() {
+        cout << "\n🔐 Account Number: " << accountNumber << "\n💰 Balance: ₹" << balance << "\n";
+        showTransactions();
+    }
+};
+
+// Customer class
+class Customer {
+public:
+    string name;
+    int customerId;
+    Account account;
+
+    Customer(string n, int id) : account(id) {
+        name = n;
+        customerId = id;
+    }
+
+    void displayCustomer() {
+        cout << "\n👤 Name: " << name << "\n🆔 Customer ID: " << customerId;
+        account.displayAccountInfo();
+    }
+};
+
+// Main Banking System
+int main() {
+    vector<Customer> customers;
+    int choice, id;
+    string name;
+    double amount;
+
+    while (true) {
+        cout << "\n--- Banking System Menu ---\n";
+        cout << "1. Create Customer & Account\n";
+        cout << "2. Deposit Money\n";
+        cout << "3. Withdraw Money\n";
+        cout << "4. Transfer Money\n";
+        cout << "5. Show Account Info\n";
+        cout << "6. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            cout << "Enter Customer Name: ";
+            cin >> name;
+            id = customers.size() + 1001;
+            customers.push_back(Customer(name, id));
+            cout << "✅ Account created. Account No: " << id << endl;
+            break;
+
+        case 2:
+            cout << "Enter Account Number: ";
+            cin >> id;
+            for (auto &c : customers) {
+                if (c.customerId == id) {
+                    cout << "Enter amount to deposit: ₹";
+                    cin >> amount;
+                    c.account.deposit(amount);
+                    break;
+                }
+            }
+            break;
+
+        case 3:
+            cout << "Enter Account Number: ";
+            cin >> id;
+            for (auto &c : customers) {
+                if (c.customerId == id) {
+                    cout << "Enter amount to withdraw: ₹";
+                    cin >> amount;
+                    c.account.withdraw(amount);
+                    break;
+                }
+            }
+            break;
+
+        case 4: {
+            int fromAcc, toAcc;
+            cout << "Enter Your Account Number: ";
+            cin >> fromAcc;
+            cout << "Enter Receiver's Account Number: ";
+            cin >> toAcc;
+            cout << "Enter amount to transfer: ₹";
+            cin >> amount;
+            Customer *sender = nullptr, *receiver = nullptr;
+            for (auto &c : customers) {
+                if (c.customerId == fromAcc) sender = &c;
+                if (c.customerId == toAcc) receiver = &c;
+            }
+            if (sender && receiver) {
+                if (sender->account.withdraw(amount)) {
+                    receiver->account.deposit(amount);
+                    cout << "✅ ₹" << amount << " transferred successfully!\n";
+                }
+            } else {
+                cout << "❌ Account not found.\n";
+            }
+            break;
+        }
+
+        case 5:
+            cout << "Enter Account Number: ";
+            cin >> id;
+            for (auto &c : customers) {
+                if (c.customerId == id) {
+                    c.displayCustomer();
+                    break;
+                }
+            }
+            break;
+
+        case 6:
+            cout << "👋 Thank you for using the Banking System!\n";
+            exit(0);
+
+        default:
+            cout << "❌ Invalid choice! Try again.\n";
+        }
+    }
+
+    return 0;
+}
